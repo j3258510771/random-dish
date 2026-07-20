@@ -4,12 +4,218 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>今天吃什么</title>
-    
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 15px;
+        }
+        .container { max-width: 420px; margin: 0 auto; }
+        h1 { text-align: center; color: white; font-size: 24px; margin-bottom: 20px; }
+        .filter-section {
+            background: rgba(255,255,255,0.2);
+            border-radius: 15px;
+            padding: 12px;
+            margin-bottom: 15px;
+        }
+        .filter-title { color: white; font-size: 12px; margin-bottom: 8px; }
+        .filter-tags { display: flex; flex-wrap: wrap; gap: 6px; }
+        .filter-tag {
+            padding: 6px 12px;
+            font-size: 12px;
+            border: 1.5px solid white;
+            background: transparent;
+            color: white;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .filter-tag.active { background: white; color: #667eea; }
+        .result-card {
+            background: white;
+            border-radius: 20px;
+            padding: 25px;
+            text-align: center;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            margin-bottom: 15px;
+            min-height: 150px;
+            overflow: hidden;
+        }
+        .result-content {
+            animation: rollIn 0.5s ease-out;
+        }
+        @keyframes rollIn {
+            0% { transform: translateY(-30px); opacity: 0; }
+            100% { transform: translateY(0); opacity: 1; }
+        }
+        .result-emoji { font-size: 48px; margin-bottom: 10px; }
+        .result-name { font-size: 22px; color: #333; font-weight: bold; margin-bottom: 5px; }
+        .result-tags { display: flex; justify-content: center; gap: 6px; margin-bottom: 12px; flex-wrap: wrap; }
+        .result-tag { font-size: 11px; padding: 3px 8px; border-radius: 10px; }
+        .tag-meat { background: #ffe0e0; color: #d32f2f; }
+        .tag-veg { background: #e0f7e0; color: #388e3c; }
+        .tag-seafood { background: #e0f0ff; color: #1976d2; }
+        .tag-noodle { background: #fff3e0; color: #e65100; }
+        .tag-deli { background: #fce4ec; color: #c62828; }
+        .tag-pastry { background: #fff8e1; color: #f57f17; }
+        .tag-soup { background: #e8eaf6; color: #283593; }
+        .tag-congee { background: #f3e5f5; color: #6a1b9a; }
+        .detail-section { text-align: left; margin-top: 15px; }
+        .detail-title { font-size: 12px; color: #888; margin-bottom: 5px; }
+        .detail-content { font-size: 14px; color: #333; line-height: 1.6; white-space: pre-wrap; }
+        .detail-time {
+            display: inline-block;
+            background: #667eea;
+            color: white;
+            padding: 4px 12px;
+            border-radius: 10px;
+            font-size: 12px;
+            margin-bottom: 10px;
+        }
+        .btn-random {
+            width: 100%;
+            padding: 16px;
+            font-size: 18px;
+            font-weight: bold;
+            color: white;
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            border: none;
+            border-radius: 15px;
+            cursor: pointer;
+            box-shadow: 0 5px 20px rgba(245, 87, 108, 0.4);
+            margin-bottom: 15px;
+            transition: transform 0.2s;
+        }
+        .btn-random:active { transform: scale(0.95); }
+        .panel-tabs {
+            display: flex;
+            background: white;
+            border-radius: 15px 15px 0 0;
+            overflow: hidden;
+        }
+        .panel-tab {
+            flex: 1;
+            padding: 12px;
+            text-align: center;
+            font-size: 14px;
+            border: none;
+            background: white;
+            color: #666;
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+            transition: all 0.3s;
+        }
+        .panel-tab.active { color: #667eea; border-bottom-color: #667eea; font-weight: bold; }
+        .panel {
+            background: white;
+            border-radius: 0 0 20px 20px;
+            padding: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            margin-bottom: 15px;
+        }
+        .panel-content { display: none; }
+        .panel-content.active { display: block; }
+        .form-group { margin-bottom: 12px; }
+        .form-label { font-size: 12px; color: #666; margin-bottom: 4px; display: block; }
+        .form-input, .form-textarea, .form-select {
+            width: 100%;
+            padding: 10px;
+            border: 1.5px solid #eee;
+            border-radius: 10px;
+            font-size: 14px;
+            outline: none;
+            transition: border-color 0.3s;
+        }
+        .form-input:focus, .form-textarea:focus { border-color: #667eea; }
+        .form-textarea { min-height: 60px; resize: vertical; }
+        .form-row { display: flex; gap: 10px; }
+        .form-row > * { flex: 1; }
+        .btn-add {
+            width: 100%;
+            padding: 12px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            cursor: pointer;
+            margin-top: 10px;
+            transition: background 0.3s;
+        }
+        .btn-add:hover { background: #5a6fd6; }
+        .parse-box {
+            background: #f8f9fa;
+            border: 2px dashed #ccc;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 15px;
+        }
+        .parse-box textarea {
+            width: 100%;
+            min-height: 120px;
+            border: none;
+            background: transparent;
+            font-size: 14px;
+            resize: vertical;
+            outline: none;
+        }
+        .parse-hint { font-size: 11px; color: #999; margin-top: 8px; }
+        .btn-parse {
+            width: 100%;
+            padding: 12px;
+            background: #28a745;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 14px;
+            cursor: pointer;
+            margin-top: 10px;
+            transition: background 0.3s;
+        }
+        .btn-parse:hover { background: #218838; }
+        .dish-list { max-height: 300px; overflow-y: auto; }
+        .dish-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px;
+            border-bottom: 1px solid #eee;
+        }
+        .dish-item:last-child { border-bottom: none; }
+        .dish-info { display: flex; align-items: center; gap: 8px; flex: 1; }
+        .dish-name { font-size: 14px; }
+        .dish-tags { display: flex; gap: 4px; }
+        .dish-tag { font-size: 10px; padding: 2px 6px; border-radius: 8px; }
+        .btn-delete {
+            background: #ff5252;
+            color: white;
+            border: none;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        .btn-edit {
+            background: #667eea;
+            color: white;
+            border: none;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 12px;
+            margin-right: 5px;
+        }
+        .empty-hint { text-align: center; color: #999; padding: 20px; font-size: 13px; }
+        .dish-count { font-size: 12px; color: #999; text-align: right; margin-bottom: 10px; }
+    </style>
 </head>
 <body>
     <div class="container">
         <h1>🍽️ 今天吃什么</h1>
-        
         <div class="filter-section">
             <div class="filter-title">🏷️ 按类型筛选</div>
             <div class="filter-tags">
@@ -43,26 +249,25 @@
                 <button class="filter-tag" data-value="home" onclick="toggleFilter(this,'style')">🏠 家常菜</button>
             </div>
         </div>
-        
         <div class="result-card" id="resultCard">
-            <div class="result-emoji" id="resultEmoji">🤔</div>
-            <div class="result-name" id="resultName">点击下方按钮</div>
-            <div class="result-tags" id="resultTags"></div>
-            <div id="resultDetails" style="display:none">
-                <div class="detail-time" id="resultTime"></div>
-                <div class="detail-section">
-                    <div class="detail-title">📋 配料</div>
-                    <div class="detail-content" id="resultIngredients"></div>
-                </div>
-                <div class="detail-section">
-                    <div class="detail-title">👨‍🍳 做法</div>
-                    <div class="detail-content" id="resultSteps"></div>
+            <div id="resultContent">
+                <div class="result-emoji" id="resultEmoji">🤔</div>
+                <div class="result-name" id="resultName">点击下方按钮</div>
+                <div class="result-tags" id="resultTags"></div>
+                <div id="resultDetails" style="display:none">
+                    <div class="detail-time" id="resultTime"></div>
+                    <div class="detail-section">
+                        <div class="detail-title">📋 配料</div>
+                        <div class="detail-content" id="resultIngredients"></div>
+                    </div>
+                    <div class="detail-section">
+                        <div class="detail-title">👨‍🍳 做法</div>
+                        <div class="detail-content" id="resultSteps"></div>
+                    </div>
                 </div>
             </div>
         </div>
-        
         <button class="btn-random" onclick="randomDish()">🎲 随机一下</button>
-        
         <div class="panel-tabs">
             <button class="panel-tab active" onclick="switchPanel('list', this)">📋 菜品列表</button>
             <button class="panel-tab" onclick="switchPanel('add', this)">➕ 添加菜品</button>
@@ -75,7 +280,6 @@
                     <div class="empty-hint">还没有菜品，快来添加吧~</div>
                 </div>
             </div>
-            
             <div class="panel-content" id="panelAdd">
                 <div class="form-group">
                     <label class="form-label">菜名 *</label>
@@ -124,9 +328,21 @@
                 <div class="form-group">
                     <label class="form-label">做法步骤</label>
                     <textarea class="form-textarea" id="addSteps" placeholder="1. 五花肉切块&#10;2. 冷水下锅焯水&#10;3. 锅中放油炒糖色..."></textarea>
-          <script>
+                </div>
+                <button class="btn-add" onclick="addDishManual()">添加菜品</button>
+            </div>
+            <div class="panel-content" id="panelParse">
+                <div class="parse-box">
+                    <textarea id="parseInput" placeholder="复制粘贴菜谱内容到这里...&#10;&#10;支持格式1：&#10;菜名：番茄炒蛋 配料：番茄2个、鸡蛋3个 做法：1.番茄切块 2.热锅凉油 时间：10分钟&#10;&#10;支持格式2（用中点分隔）：&#10;菜品1：糖醋排骨 · 类型：荤菜 · 口味：不辣 · 菜系：家常菜 · 时间：40分钟 · 配料：... · 做法：..."></textarea>
+                    <div class="parse-hint">💡 支持识别：菜名、配料、做法步骤、烹饪时间、类型、口味、菜系</div>
+                </div>
+                <button class="btn-parse" onclick="parseAndAdd()">🔍 识别并添加</button>
+                <div id="parseResult" style="margin-top:15px"></div>
+            </div>
+        </div>
+    </div>
+    <script>
         const defaultDishes = [
-            // === 荤菜 ===
             { name: '红烧肉', type: 'meat', taste: 'mild', style: 'home', time: '60分钟', emoji: '🥩', ingredients: '五花肉500g、冰糖30g、生抽2勺、老抽1勺、料酒2勺、八角2个、桂皮1块、葱姜', steps: '1. 五花肉切块，冷水下锅焯水去血沫\n2. 锅中放少许油，小火炒化冰糖至焦糖色\n3. 放入五花肉翻炒上色\n4. 加入葱姜、八角、桂皮炒香\n5. 加料酒、生抽、老抽，加热水没过肉\n6. 大火烧开转小火炖45分钟\n7. 大火收汁即可' },
             { name: '可乐鸡翅', type: 'meat', taste: 'mild', style: 'home', time: '30分钟', emoji: '🍗', ingredients: '鸡翅8个、可乐1罐、生抽2勺、老抽1勺、姜片、料酒', steps: '1. 鸡翅两面划刀，冷水下锅焯水\n2. 锅中少许油，煎鸡翅至两面金黄\n3. 加姜片、料酒、生抽、老抽\n4. 倒入可乐没过鸡翅\n5. 大火烧开转小火炖15分钟\n6. 大火收汁即可' },
             { name: '葱花煎蛋', type: 'meat', taste: 'mild', style: 'home', time: '5分钟', emoji: '🍳', ingredients: '鸡蛋4个、葱花、盐', steps: '1. 鸡蛋打散，加入葱花和盐搅匀\n2. 锅中油热，倒入蛋液\n3. 中小火煎至底部凝固\n4. 翻面煎至两面金黄出锅' },
@@ -134,7 +350,6 @@
             { name: '潮汕牛肉丸汤', type: 'meat', taste: 'mild', style: 'chaoshan', time: '15分钟', emoji: '🧆', ingredients: '牛肉丸200g、芹菜末、盐、胡椒粉', steps: '1. 水烧开，放入牛肉丸\n2. 煮至丸子浮起\n3. 加盐、胡椒粉调味\n4. 撒上芹菜末即可' },
             { name: '鱼香肉丝', type: 'meat', taste: 'spicy', style: 'home', time: '20分钟', emoji: '🐷', ingredients: '猪里脊肉200g、胡萝卜半根、木耳适量、青椒1个、蒜末、豆瓣酱1勺、醋2勺、糖1勺、生抽1勺、淀粉', steps: '1. 猪肉切丝，加料酒、淀粉腌10分钟\n2. 胡萝卜、木耳、青椒切丝\n3. 调碗汁：醋2勺、糖1勺、生抽1勺、淀粉1勺、水2勺\n4. 锅中油热，滑炒肉丝变色盛出\n5. 锅留底油，炒豆瓣酱出红油\n6. 放入蔬菜丝翻炒\n7. 倒入肉丝和碗汁翻匀即可' },
             { name: '回锅肉', type: 'meat', taste: 'spicy', style: 'home', time: '30分钟', emoji: '🥩', ingredients: '五花肉300g、蒜苗2根、青椒1个、豆瓣酱1勺、甜面酱半勺、生抽、糖', steps: '1. 五花肉整块冷水下锅煮20分钟\n2. 捞出放凉切薄片\n3. 蒜苗切段，青椒切块\n4. 锅中不放油，下五花肉煸炒至出油卷曲\n5. 加豆瓣酱、甜面酱炒香\n6. 放入蒜苗和青椒翻炒\n7. 加少许糖、生抽调味' },
-            // === 素菜 ===
             { name: '番茄炒蛋', type: 'veg', taste: 'mild', style: 'home', time: '10分钟', emoji: '🍅', ingredients: '番茄2个、鸡蛋3个、葱花、盐、糖、生抽', steps: '1. 番茄切块，鸡蛋打散加少许盐\n2. 热锅凉油，倒入蛋液炒散盛出\n3. 锅中放油，炒番茄至出汁\n4. 加入炒好的鸡蛋，加盐、少许糖、生抽调味\n5. 撒葱花出锅' },
             { name: '酸辣土豆丝', type: 'veg', taste: 'spicy', style: 'home', time: '10分钟', emoji: '🥔', ingredients: '土豆1个、干辣椒5个、花椒少许、蒜末、醋2勺、盐', steps: '1. 土豆去皮切丝，泡水洗掉淀粉\n2. 锅中油热，爆香干辣椒和花椒\n3. 放入土豆丝大火翻炒\n4. 加醋、盐调味，炒至断生即可' },
             { name: '蒜蓉空心菜', type: 'veg', taste: 'mild', style: 'home', time: '5分钟', emoji: '🥬', ingredients: '空心菜1把、蒜末5瓣、盐、蚝油', steps: '1. 空心菜洗净切段\n2. 锅中油热，爆香蒜末\n3. 放入空心菜大火快炒\n4. 加盐、蚝油调味，炒软出锅' },
@@ -145,41 +360,26 @@
             { name: '蚝油生菜', type: 'veg', taste: 'mild', style: 'cantonese', time: '5分钟', emoji: '🥬', ingredients: '生菜1颗、蒜末、蚝油2勺、生抽1勺、糖少许', steps: '1. 生菜洗净，手撕成大片\n2. 水烧开加少许盐和油\n3. 生菜焯水10秒立即捞出摆盘\n4. 锅中少许油，爆香蒜末\n5. 加蚝油、生抽、少许糖和少量水煮开\n6. 将酱汁淋在生菜上' },
             { name: '香菇炒青菜', type: 'veg', taste: 'mild', style: 'home', time: '8分钟', emoji: '🍄', ingredients: '香菇6朵、小油菜1把、蒜末、蚝油1勺、盐', steps: '1. 香菇切片，油菜洗净\n2. 锅中油热，爆香蒜末\n3. 放入香菇翻炒至软\n4. 放入油菜大火快炒\n5. 加蚝油和盐调味\n6. 炒至油菜断生即可' },
             { name: '麻婆豆腐', type: 'veg', taste: 'spicy', style: 'sichuan', time: '15分钟', emoji: '🫕', ingredients: '嫩豆腐1块、猪肉末100g、豆瓣酱1勺、花椒粉、葱花', steps: '1. 豆腐切小块，焯水备用\n2. 锅中油热，炒香肉末\n3. 加豆瓣酱炒出红油\n4. 加水烧开，放入豆腐\n5. 小火炖5分钟入味\n6. 勾芡，撒花椒粉和葱花' },
-            // === 海鲜 ===
             { name: '清蒸鲈鱼', type: 'seafood', taste: 'mild', style: 'cantonese', time: '25分钟', emoji: '🐟', ingredients: '鲈鱼1条、葱丝、姜丝、蒸鱼豉油、料酒', steps: '1. 鲈鱼清洗干净，两面划几刀\n2. 抹上料酒，肚子里塞葱姜，腌10分钟\n3. 水烧开，放入鱼大火蒸8-10分钟\n4. 倒掉蒸出的汤汁\n5. 铺上葱姜丝，淋热油\n6. 淋上蒸鱼豉油即可' },
-            // === 面食 ===
             { name: '炸酱面', type: 'noodle', taste: 'mild', style: 'home', time: '25分钟', emoji: '🍜', ingredients: '五花肉200g、甜面酱3勺、黄豆酱1勺、黄瓜丝、豆芽、蒜末、姜末', steps: '1. 五花肉切小丁\n2. 锅中油热，炒肉丁至变色出油\n3. 加姜末、蒜末炒香\n4. 放甜面酱和黄豆酱，小火炒10分钟至酱香浓稠\n5. 黄瓜切丝，豆芽焯水\n6. 面条煮熟捞出\n7. 浇上炸酱，放黄瓜丝和豆芽拌匀' },
             { name: '阳春面', type: 'noodle', taste: 'mild', style: 'home', time: '10分钟', emoji: '🍜', ingredients: '细面条150g、猪油1勺、生抽2勺、盐、葱花', steps: '1. 碗中放猪油、生抽、少许盐\n2. 水烧开，煮面条至熟\n3. 先舀一勺面汤冲开碗底调料\n4. 捞出面条放入碗中\n5. 撒上葱花即可' },
             { name: '酸辣粉', type: 'noodle', taste: 'spicy', style: 'home', time: '15分钟', emoji: '🍜', ingredients: '红薯粉100g、花生碎、榨菜、香菜、葱花、醋2勺、辣椒油、生抽', steps: '1. 红薯粉提前泡软，焯水煮熟\n2. 碗中放醋、辣椒油、生抽调底料\n3. 舀一勺热汤冲开\n4. 放入红薯粉\n5. 撒上花生碎、榨菜、香菜、葱花' },
             { name: '担担面', type: 'noodle', taste: 'spicy', style: 'sichuan', time: '20分钟', emoji: '🍜', ingredients: '面条150g、猪肉末50g、芽菜、花生碎、芝麻酱1勺、辣椒油、花椒粉、生抽', steps: '1. 锅中油热，炒香肉末和芽菜\n2. 碗中放芝麻酱、辣椒油、花椒粉、生抽\n3. 面条煮熟捞入碗中\n4. 浇上炒好的肉末\n5. 撒花生碎拌匀' },
             { name: '油泼面', type: 'noodle', taste: 'spicy', style: 'home', time: '15分钟', emoji: '🍜', ingredients: '宽面条150g、蒜末、葱花、辣椒面、生抽、醋', steps: '1. 面条煮熟捞出放碗中\n2. 放上蒜末、葱花、辣椒面\n3. 淋上生抽和少许醋\n4. 烧一勺热油，浇在辣椒面上\n5. 拌匀即可' },
-            // === 熟食 ===
             { name: '白切鸡', type: 'deli', taste: 'mild', style: 'cantonese', time: '40分钟', emoji: '🍗', ingredients: '三黄鸡1只、姜葱、沙姜、香油', steps: '1. 鸡洗净，水烧开后放入鸡\n2. 大火煮3分钟后关火焖20分钟\n3. 捞出过冰水\n4. 斩件摆盘\n5. 蘸料：沙姜末、葱油、香油、生抽' },
-            // === 饼类 ===
             { name: '手抓饼', type: 'pastry', taste: 'mild', style: 'home', time: '10分钟', emoji: '🫓', ingredients: '手抓饼胚1张、鸡蛋1个、生菜、香肠、甜面酱', steps: '1. 平底锅不放油，放入饼胚\n2. 小火煎至底部金黄翻面\n3. 打一个鸡蛋在饼上\n4. 翻面煎熟\n5. 刷甜面酱，放生菜和香肠\n6. 卷起来即可' },
-            // === 汤类 ===
             { name: '紫菜蛋花汤', type: 'soup', taste: 'mild', style: 'home', time: '8分钟', emoji: '🥣', ingredients: '紫菜适量、鸡蛋1个、虾皮少许、盐、香油、葱花', steps: '1. 水烧开\n2. 放入紫菜和虾皮\n3. 鸡蛋打散，淋入锅中\n4. 加盐调味\n5. 淋香油，撒葱花' },
-            // === 粥类 ===
             { name: '皮蛋瘦肉粥', type: 'congee', taste: 'mild', style: 'cantonese', time: '60分钟', emoji: '🍚', ingredients: '大米100g、皮蛋2个、瘦肉150g、姜丝、葱花、盐、白胡椒粉', steps: '1. 大米洗净加水大火烧开\n2. 转小火熬至浓稠\n3. 瘦肉切丝，用盐和淀粉腌制\n4. 皮蛋切小块\n5. 放入肉丝煮熟\n6. 加入皮蛋煮5分钟\n7. 加盐和白胡椒粉调味，撒葱花' }
         ];
-
         let dishes = [];
         let currentFilters = { type: 'all', taste: 'all', style: 'all' };
-
         function init() {
             const saved = localStorage.getItem('randomDishes');
-            if (saved) {
-                dishes = JSON.parse(saved);
-            } else {
-                dishes = JSON.parse(JSON.stringify(defaultDishes));
-            }
+            if (saved) { dishes = JSON.parse(saved); }
+            else { dishes = JSON.parse(JSON.stringify(defaultDishes)); }
             renderDishList();
         }
-
-        function save() {
-            localStorage.setItem('randomDishes', JSON.stringify(dishes));
-        }
-
+        function save() { localStorage.setItem('randomDishes', JSON.stringify(dishes)); }
         function toggleFilter(btn, category) {
             const value = btn.dataset.value;
             currentFilters[category] = value;
@@ -187,7 +387,6 @@
             siblings.forEach(b => b.classList.remove('active'));
             btn.classList.add('active');
         }
-
         function getFiltered() {
             return dishes.filter(d => {
                 if (currentFilters.type !== 'all' && d.type !== currentFilters.type) return false;
@@ -196,7 +395,6 @@
                 return true;
             });
         }
-
         function randomDish() {
             const filtered = getFiltered();
             if (filtered.length === 0) {
@@ -207,87 +405,70 @@
                 return;
             }
             const dish = filtered[Math.floor(Math.random() * filtered.length)];
+            const resultContent = document.getElementById('resultContent');
+            resultContent.style.animation = 'none';
+            resultContent.offsetHeight;
+            resultContent.style.animation = 'rollIn 0.5s ease-out';
             document.getElementById('resultEmoji').textContent = dish.emoji;
             document.getElementById('resultName').textContent = dish.name;
-            
             const typeNames = { meat: '荤菜', veg: '素菜', seafood: '海鲜', noodle: '面食', deli: '熟食', pastry: '饼类', soup: '汤类', congee: '粥类' };
             const tasteNames = { spicy: '辣', mild: '不辣' };
             const styleNames = { sichuan: '川菜', cantonese: '粤菜', dongbei: '东北菜', chaoshan: '潮汕菜', home: '家常菜' };
-            const tagClass = 'tag-' + dish.type;
-            
-            document.getElementById('resultTags').innerHTML = 
-                `<span class="result-tag ${tagClass}">${typeNames[dish.type]}</span>
-                 <span class="result-tag" style="background:#f5f5f5">${tasteNames[dish.taste]}</span>
-                 <span class="result-tag" style="background:#e8f5e9">${styleNames[dish.style]}</span>`;
-            
+            document.getElementById('resultTags').innerHTML =
+                '<span class="result-tag tag-' + dish.type + '">' + typeNames[dish.type] + '</span>' +
+                '<span class="result-tag" style="background:#f5f5f5">' + tasteNames[dish.taste] + '</span>' +
+                '<span class="result-tag" style="background:#e8f5e9">' + styleNames[dish.style] + '</span>';
             document.getElementById('resultTime').textContent = '⏱️ ' + dish.time;
             document.getElementById('resultIngredients').textContent = dish.ingredients;
             document.getElementById('resultSteps').textContent = dish.steps;
             document.getElementById('resultDetails').style.display = 'block';
+            document.getElementById('resultCard').scrollIntoView({ behavior: 'smooth', block: 'start' });
         }
-
         function switchPanel(name, btn) {
             document.querySelectorAll('.panel-content').forEach(p => p.classList.remove('active'));
             document.querySelectorAll('.panel-tab').forEach(t => t.classList.remove('active'));
             document.getElementById('panel' + name.charAt(0).toUpperCase() + name.slice(1)).classList.add('active');
             btn.classList.add('active');
         }
-
         function renderDishList() {
             const list = document.getElementById('dishList');
-            document.getElementById('dishCount').textContent = `共 ${dishes.length} 道菜`;
+            document.getElementById('dishCount').textContent = '共 ' + dishes.length + ' 道菜';
             if (dishes.length === 0) {
                 list.innerHTML = '<div class="empty-hint">还没有菜品，快来添加吧~</div>';
                 return;
             }
             const typeNames = { meat: '荤菜', veg: '素菜', seafood: '海鲜', noodle: '面食', deli: '熟食', pastry: '饼类', soup: '汤类', congee: '粥类' };
             const tasteNames = { spicy: '辣', mild: '不辣' };
-            list.innerHTML = dishes.map((d, i) => `
-                <div class="dish-item">
-                    <div class="dish-info">
-                        <span class="dish-name">${d.emoji} ${d.name}</span>
-                        <div class="dish-tags">
-                            <span class="dish-tag tag-${d.type}">${typeNames[d.type]}</span>
-                            <span class="dish-tag" style="background:#f5f5f5">${tasteNames[d.taste]}</span>
-                        </div>
-                    </div>
-                    <button class="btn-edit" onclick="editDish(${i})">✏️</button>
-                    <button class="btn-delete" onclick="deleteDish(${i})">×</button>
-                </div>
-            `).join('');
+            list.innerHTML = dishes.map((d, i) =>
+                '<div class="dish-item"><div class="dish-info"><span class="dish-name">' + d.emoji + ' ' + d.name + '</span><div class="dish-tags"><span class="dish-tag tag-' + d.type + '">' + typeNames[d.type] + '</span><span class="dish-tag" style="background:#f5f5f5">' + tasteNames[d.taste] + '</span></div></div><button class="btn-edit" onclick="editDish(' + i + ')">✏️</button><button class="btn-delete" onclick="deleteDish(' + i + ')">×</button></div>'
+            ).join('');
         }
-
         function addDishManual() {
             const name = document.getElementById('addName').value.trim();
             if (!name) { alert('请输入菜名'); return; }
+            const emojis = { meat: '🥩', veg: '🥬', seafood: '🦐', noodle: '🍜', deli: '🍖', pastry: '🫓', soup: '🥣', congee: '🍚' };
+            const type = document.getElementById('addType').value;
             dishes.push({
-                name: name,
-                type: document.getElementById('addType').value,
+                name: name, type: type,
                 taste: document.getElementById('addTaste').value,
                 style: document.getElementById('addStyle').value,
                 time: document.getElementById('addTime').value || '未知',
-                emoji: getEmoji(document.getElementById('addType').value),
+                emoji: emojis[type] || '🍽️',
                 ingredients: document.getElementById('addIngredients').value || '暂无',
                 steps: document.getElementById('addSteps').value || '暂无'
             });
-            save();
-            renderDishList();
-            alert('添加成功！');
+            save(); renderDishList(); alert('添加成功！');
             document.getElementById('addName').value = '';
             document.getElementById('addTime').value = '';
             document.getElementById('addIngredients').value = '';
             document.getElementById('addSteps').value = '';
             switchPanel('list', document.querySelector('.panel-tab'));
         }
-
         function deleteDish(i) {
             if (confirm('确定删除「' + dishes[i].name + '」吗？')) {
-                dishes.splice(i, 1);
-                save();
-                renderDishList();
+                dishes.splice(i, 1); save(); renderDishList();
             }
         }
-
         function editDish(i) {
             const d = dishes[i];
             const newName = prompt('菜名', d.name);
@@ -295,103 +476,80 @@
             const newTime = prompt('烹饪时间', d.time);
             const newIngredients = prompt('配料', d.ingredients);
             const newSteps = prompt('做法', d.steps);
-            dishes[i] = { ...d, name: newName || d.name, time: newTime || d.time, ingredients: newIngredients || d.ingredients, steps: newSteps || d.steps };
-            save();
-            renderDishList();
+            dishes[i] = { name: newName || d.name, type: d.type, taste: d.taste, style: d.style, time: newTime || d.time, emoji: d.emoji, ingredients: newIngredients || d.ingredients, steps: newSteps || d.steps };
+            save(); renderDishList();
         }
-
-        function getEmoji(type) {
-            const emojis = { meat: '🥩', veg: '🥬', seafood: '🦐', noodle: '🍜', deli: '🍖', pastry: '🫓', soup: '🥣', congee: '🍚' };
-            return emojis[type] || '🍽️';
-        }
-
         function parseAndAdd() {
             const text = document.getElementById('parseInput').value.trim();
             if (!text) { alert('请粘贴菜谱内容'); return; }
-            
-            let name = '', ingredients = '', steps = '', time = '未知';
-            
-            const nameMatch = text.match(/菜名[：:]\s*(.+?)(?:\s|配|做|时|$)/);
+            let name = '', ingredients = '', steps = '', time = '未知', type = 'meat', taste = 'mild', style = 'home';
+            const nameMatch = text.match(/(?:菜品\d+[：:]\s*|菜名[：:]\s*)(.+?)(?:\s*·|\s*$)/);
             if (nameMatch) name = nameMatch[1].trim();
-            
-            const ingMatch = text.match(/配料[：:]\s*(.+?)(?:\s|做|时|$)/);
+            const typeMatch = text.match(/类型[：:]\s*(.+?)(?:\s*·|\s*$)/m);
+            if (typeMatch) {
+                const typeText = typeMatch[1].trim();
+                if (/荤|肉|猪|牛|羊|鸡|鸭|鱼/.test(typeText)) type = 'meat';
+                else if (/素|菜|豆|蛋|茄|瓜|菇/.test(typeText)) type = 'veg';
+                else if (/海鲜|虾|蟹|贝/.test(typeText)) type = 'seafood';
+                else if (/面|粉|米/.test(typeText)) type = 'noodle';
+                else if (/熟食|卤/.test(typeText)) type = 'deli';
+                else if (/饼/.test(typeText)) type = 'pastry';
+                else if (/汤|羹/.test(typeText)) type = 'soup';
+                else if (/粥/.test(typeText)) type = 'congee';
+            }
+            const tasteMatch = text.match(/口味[：:]\s*(.+?)(?:\s*·|\s*$)/m);
+            if (tasteMatch) {
+                const tasteText = tasteMatch[1].trim();
+                if (/辣|麻辣|香辣|酸辣/.test(tasteText)) taste = 'spicy';
+                else taste = 'mild';
+            }
+            const styleMatch = text.match(/菜系[：:]\s*(.+?)(?:\s*·|\s*$)/m);
+            if (styleMatch) {
+                const styleText = styleMatch[1].trim();
+                if (/川/.test(styleText)) style = 'sichuan';
+                else if (/粤|广/.test(styleText)) style = 'cantonese';
+                else if (/东北/.test(styleText)) style = 'dongbei';
+                else if (/潮汕/.test(styleText)) style = 'chaoshan';
+                else style = 'home';
+            }
+            const ingMatch = text.match(/配料[：:]\s*(.+?)(?:\s*·|做法|$)/s);
             if (ingMatch) ingredients = ingMatch[1].trim();
-            
-            const stepMatch = text.match(/做法[：:]\s*([\s\S]+?)(?:时间|$)/);
+            const stepMatch = text.match(/做法[：:]\s*([\s\S]+?)(?:时间[：:]|$)/);
             if (stepMatch) steps = stepMatch[1].trim();
-            
-            const timeMatch = text.match(/时间[：:]\s*(.+?)$/m);
+            const timeMatch = text.match(/时间[：:]\s*(.+?)(?:\s*·|\s*$)/m);
             if (timeMatch) time = timeMatch[1].trim();
-            
-            if (!name) {
-                const lines = text.split('\n').filter(l => l.trim());
-                if (lines.length > 0) {
-                    const firstLine = lines[0];
-                    const m = firstLine.match(/^菜名[：:]\s*(.+)/);
-                    name = m ? m[1].trim() : firstLine.substring(0, 20);
+            if (!ingredients && !steps) {
+                const parts = text.split(/[·，,；;]/);
+                if (parts.length > 1) {
+                    const ingPart = text.match(/(?:排骨|肉|鸡|虾|豆腐|菜|蛋|面|粉|粥|汤|饼|瓜|茄|菇|土豆|黄瓜|番茄|花生|红薯|粉丝|大米|紫菜)[^·]*(?:[·])/);
                 }
             }
-            
             if (!name) {
-                alert('未能识别菜名，请检查输入格式');
-                return;
+                const lines = text.split('\n').filter(function(l) { return l.trim(); });
+                if (lines.length > 0) { name = lines[0].replace(/菜品\d+[：:]\s*/, '').substring(0, 20); }
             }
-
-            const type = guessType(text);
-            const taste = guessTaste(text);
-            const style = guessStyle(text);
-
-            const resultDiv = document.getElementById('parseResult');
-            resultDiv.innerHTML = `
-                <div style="background:#f0f9ff; border-radius:10px; padding:15px; border:1px solid #d0e3f7;">
-                    <div style="font-weight:bold; margin-bottom:8px;">🔍 识别结果：</div>
-                    <div><b>菜名：</b>${name}</div>
-                    <div><b>类型：</b>${getEmoji(type)} ${type}</div>
-                    <div><b>口味：</b>${taste}</div>
-                    <div><b>菜系：</b>${style}</div>
-                    <div><b>配料：</b>${ingredients || '未识别'}</div>
-                    <div><b>做法：</b>${steps || '未识别'}</div>
-                    <div><b>时间：</b>${time}</div>
-                    <button style="margin-top:10px; padding:8px 20px; background:#28a745; color:white; border:none; border-radius:8px; cursor:pointer;" onclick="confirmParseAdd('${encodeURIComponent(name)}','${encodeURIComponent(ingredients)}','${encodeURIComponent(steps)}','${encodeURIComponent(time)}','${type}','${taste}','${style}')">
-                        ✅ 确认添加
-                    </button>
-                </div>
-            `;
-        }
-
-        function confirmParseAdd(name, ingredients, steps, time, type, taste, style) {
-            dishes.push({
-                name: decodeURIComponent(name),
-                type: type,
-                taste: taste,
-                style: style,
-                time: decodeURIComponent(time),
-                emoji: getEmoji(type),
-                ingredients: decodeURIComponent(ingredients) || '暂无',
-                steps: decodeURIComponent(steps) || '暂无'
-            });
-            save();
-            renderDishList();
-            document.getElementById('parseResult').innerHTML = '<div style="color:#28a745; padding:10px;">✅ 已添加到菜品列表！</div>';
+            if (!name) { alert('未能识别菜名'); return; }
+            if (!typeMatch) type = guessType(text);
+            if (!tasteMatch) taste = guessTaste(text);
+            if (!styleMatch) style = guessStyle(text);
+            const emojis = { meat: '🥩', veg: '🥬', seafood: '🦐', noodle: '🍜', deli: '🍖', pastry: '🫓', soup: '🥣', congee: '🍚' };
+            dishes.push({ name: name, type: type, taste: taste, style: style, time: time, emoji: emojis[type] || '🍽️', ingredients: ingredients || '暂无', steps: steps || '暂无' });
+            save(); renderDishList();
+            document.getElementById('parseResult').innerHTML = '<div style="color:#28a745; padding:10px; background:#e8f5e9; border-radius:8px;">✅ 已添加：' + name + '</div>';
             document.getElementById('parseInput').value = '';
+            setTimeout(function() { document.getElementById('parseResult').innerHTML = ''; }, 3000);
         }
-
         function guessType(text) {
-            if (/海鲜|虾|蟹|鱼|贝|鱿|海参/.test(text)) return 'seafood';
-            if (/面|粉|粉条|米粉/.test(text)) return 'noodle';
+            if (/海鲜|虾|蟹|鱼|贝|鱿/.test(text)) return 'seafood';
+            if (/面|粉|米粉/.test(text)) return 'noodle';
             if (/汤|羹/.test(text)) return 'soup';
             if (/粥|稀饭/.test(text)) return 'congee';
-            if (/饼|馅饼|煎饼/.test(text)) return 'pastry';
+            if (/饼|煎饼/.test(text)) return 'pastry';
             if (/熟食|卤|酱肉|烤/.test(text)) return 'deli';
-            if (/豆腐|菜|菇|蛋|瓜|豆|茄|土豆|白菜|青菜|菠菜|芹菜/.test(text)) return 'veg';
+            if (/豆腐|菜|菇|蛋|瓜|豆|茄|土豆|白菜|青菜/.test(text)) return 'veg';
             return 'meat';
         }
-
-        function guessTaste(text) {
-            if (/辣|麻辣|香辣|酸辣/.test(text)) return 'spicy';
-            return 'mild';
-        }
-
+        function guessTaste(text) { return /辣|麻辣|香辣|酸辣/.test(text) ? 'spicy' : 'mild'; }
         function guessStyle(text) {
             if (/川|麻辣|回锅|水煮|鱼香/.test(text)) return 'sichuan';
             if (/粤|广式|白灼|白切|蒸/.test(text)) return 'cantonese';
@@ -399,7 +557,6 @@
             if (/潮汕|牛肉丸/.test(text)) return 'chaoshan';
             return 'home';
         }
-
         init();
     </script>
 </body>
